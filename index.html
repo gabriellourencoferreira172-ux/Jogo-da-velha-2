@@ -5,459 +5,501 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jogo da Velha</title>
 <style>
-  :root {
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --x: #38bdf8;
-    --o: #fb7185;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px 16px;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color: var(--text);
-    background:
-      radial-gradient(1000px 600px at 50% -10%, #1e3a5f 0%, transparent 60%),
-      radial-gradient(800px 500px at 100% 100%, #2b1e3f 0%, transparent 60%),
-      #0b1120;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #1a1a2e; color: #eee;
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+    padding: 20px;
   }
-
   .app {
-    width: min(100%, 430px);
-    padding: 28px 24px 24px;
-    border-radius: 28px;
-    background: rgba(30, 41, 59, 0.55);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .8),
-                inset 0 1px 0 rgba(255, 255, 255, .05);
-    backdrop-filter: blur(16px);
+    background: #16213e; border-radius: 14px;
+    padding: 24px; width: 380px; max-width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
+  h1 { text-align: center; font-size: 1.4rem; margin-bottom: 4px; }
+  .sub { text-align: center; font-size: 0.8rem; color: #888; margin-bottom: 18px; }
 
-  h1 { font-size: 1.6rem; text-align: center; letter-spacing: -.02em; }
-  .subtitle { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
 
-  /* ---------- Seletor de modo ---------- */
-  .modes {
-    display: flex;
-    gap: 6px;
-    padding: 5px;
-    margin: 20px 0 16px;
-    border-radius: 14px;
-    background: rgba(15, 23, 42, .7);
+  .btn {
+    width: 100%; padding: 12px; border: 0; border-radius: 10px;
+    font-size: 15px; font-weight: bold; cursor: pointer;
+    margin-bottom: 8px;
   }
-  .mode-btn {
-    flex: 1;
-    padding: 9px 8px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--muted);
-    font: inherit;
-    font-size: .85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .2s;
+  .btn-primary { background: #e94560; color: #fff; }
+  .btn-primary:hover { background: #ff5470; }
+  .btn-secondary { background: #0f3460; color: #4cc9f0; }
+  .btn-secondary:hover { background: #16376b; }
+  .btn-easy    { background: #16a34a; color: #fff; }
+  .btn-medium  { background: #eab308; color: #1a1a2e; }
+  .btn-hard    { background: #dc2626; color: #fff; }
+  .btn-easy:hover   { background: #22c55e; }
+  .btn-medium:hover { background: #facc15; }
+  .btn-hard:hover   { background: #ef4444; }
+  .btn-back {
+    background: transparent; color: #888; font-size: 13px;
+    padding: 8px; margin-top: 4px;
   }
-  .mode-btn:hover { color: var(--text); }
-  .mode-btn.active {
-    background: rgba(56, 189, 248, .15);
-    color: #7dd3fc;
-    box-shadow: inset 0 0 0 1px rgba(56, 189, 248, .3);
-  }
+  .btn-back:hover { color: #fff; }
 
-  /* ---------- Placar ---------- */
-  .scoreboard {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .score {
-    padding: 10px 6px;
-    text-align: center;
-    border-radius: 14px;
-    background: rgba(15, 23, 42, .6);
-    border: 1px solid rgba(148, 163, 184, .1);
-  }
-  .score-label {
-    display: block;
-    font-size: .68rem;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: var(--muted);
-  }
-  .score-value { display: block; font-size: 1.4rem; font-weight: 700; margin-top: 2px; }
-  .score-x .score-value { color: var(--x); }
-  .score-o .score-value { color: var(--o); }
-
-  /* ---------- Status ---------- */
   .status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    margin-bottom: 16px;
-    border-radius: 12px;
-    background: rgba(15, 23, 42, .5);
-    font-size: .95rem;
-    font-weight: 600;
-    text-align: center;
-    transition: color .25s;
+    text-align: center; padding: 10px; background: #0f3460;
+    border-radius: 8px; margin-bottom: 12px; font-weight: bold;
+    min-height: 40px; display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
   }
-  .status.turn-x { color: #7dd3fc; }
-  .status.turn-o { color: #fda4af; }
-  .status.turn-draw { color: #fcd34d; }
 
-  /* ---------- Tabuleiro ---------- */
+  /* Placar */
+  .scores { display: flex; gap: 6px; margin-bottom: 12px; }
+  .score {
+    flex: 1; background: #0f3460; border-radius: 8px;
+    padding: 6px; text-align: center;
+  }
+  .score-label { font-size: 10px; color: #999; text-transform: uppercase; }
+  .score-value { font-size: 18px; font-weight: bold; margin-top: 2px; }
+  .score.x .score-value { color: #4cc9f0; }
+  .score.o .score-value { color: #f72585; }
+
   .board {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    aspect-ratio: 1 / 1;
-    margin-bottom: 18px;
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+    gap: 6px; justify-content: center; margin-bottom: 14px;
   }
-
   .cell {
-    display: grid;
-    place-items: center;
-    font-family: inherit;
-    font-size: clamp(2.2rem, 11vw, 3rem);
-    font-weight: 700;
-    line-height: 1;
-    background: rgba(15, 23, 42, .75);
-    border: 1px solid rgba(148, 163, 184, .12);
-    border-radius: 18px;
-    cursor: pointer;
-    transition: background .2s, border-color .2s, transform .1s, box-shadow .25s;
-    -webkit-tap-highlight-color: transparent;
+    width: 80px; height: 80px; border: 0; border-radius: 8px;
+    background: #0f3460; color: #fff; font-size: 38px;
+    font-weight: bold; font-family: inherit; cursor: pointer;
+    line-height: 1; padding: 0;
   }
-  .cell:hover:not(.x):not(.o) {
-    background: rgba(56, 189, 248, .08);
-    border-color: rgba(56, 189, 248, .25);
-  }
-  .cell:active:not(.x):not(.o) { transform: scale(.97); }
-  .cell:focus-visible { outline: 2px solid var(--x); outline-offset: 2px; }
+  .cell:hover:not(:disabled) { background: #16376b; }
+  .cell.x { color: #4cc9f0; }
+  .cell.o { color: #f72585; }
+  .cell.win { background: #f9c74f; color: #1a1a2e; }
+  .cell:disabled { cursor: default; }
 
-  .cell.x { color: var(--x); text-shadow: 0 0 24px rgba(56, 189, 248, .5); }
-  .cell.o { color: var(--o); text-shadow: 0 0 24px rgba(251, 113, 133, .5); }
+  .players { font-size: 11px; color: #999; text-align: center; margin-bottom: 8px; }
 
-  .cell.pop { animation: pop .25s cubic-bezier(.2, 1.4, .5, 1); }
-  @keyframes pop {
-    from { transform: scale(.4); opacity: .2; }
-    to   { transform: scale(1);  opacity: 1; }
+  .diff-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: bold; margin-left: 6px;
   }
-
-  .cell.win {
-    background: rgba(250, 204, 21, .12);
-    border-color: rgba(250, 204, 21, .5);
-    animation: winPulse .8s ease-in-out infinite alternate;
-  }
-  @keyframes winPulse {
-    to { box-shadow: 0 0 0 1px rgba(250, 204, 21, .5), 0 0 34px rgba(250, 204, 21, .35); }
-  }
-
-  /* ---------- Botão ---------- */
-  .reset {
-    width: 100%;
-    padding: 14px;
-    border: 0;
-    border-radius: 16px;
-    font: inherit;
-    font-size: .95rem;
-    font-weight: 700;
-    color: #0b1120;
-    background: linear-gradient(135deg, #7dd3fc, #38bdf8);
-    box-shadow: 0 10px 25px -10px rgba(56, 189, 248, .8);
-    cursor: pointer;
-    transition: transform .12s, filter .2s;
-  }
-  .reset:hover { filter: brightness(1.08); }
-  .reset:active { transform: scale(.98); }
+  .diff-tag.easy   { background: #16a34a; color: #fff; }
+  .diff-tag.medium { background: #eab308; color: #1a1a2e; }
+  .diff-tag.hard   { background: #dc2626; color: #fff; }
 </style>
 </head>
 <body>
 
 <div class="app">
-  <header>
-    <h1>Jogo da Velha</h1>
-    <p class="subtitle">Três em linha para vencer</p>
-  </header>
+  <h1>Jogo da Velha</h1>
+  <p class="sub">Escolha um modo</p>
 
-  <div class="modes" role="group" aria-label="Modo de jogo">
-    <button class="mode-btn active" data-mode="cpu" type="button">vs CPU</button>
-    <button class="mode-btn" data-mode="pvp" type="button">2 Jogadores</button>
+  <!-- MENU -->
+  <div id="screenMenu" class="screen active">
+    <button class="btn btn-primary" id="btnGoCpu">🎮 Jogar vs CPU</button>
+    <button class="btn btn-secondary" id="btnGoPvp">👥 2 Jogadores</button>
   </div>
 
-  <div class="scoreboard">
-    <div class="score score-x">
-      <span class="score-label" id="labelX">Você (X)</span>
-      <span class="score-value" id="scoreX">0</span>
-    </div>
-    <div class="score score-d">
-      <span class="score-label">Empates</span>
-      <span class="score-value" id="scoreD">0</span>
-    </div>
-    <div class="score score-o">
-      <span class="score-label" id="labelO">CPU (O)</span>
-      <span class="score-value" id="scoreO">0</span>
-    </div>
+  <!-- DIFICULDADE -->
+  <div id="screenDiff" class="screen">
+    <p style="text-align:center; font-size:13px; color:#999; margin-bottom:12px;">
+      Escolha a dificuldade
+    </p>
+    <button class="btn btn-easy"   data-diff="easy">😊 Fácil</button>
+    <button class="btn btn-medium" data-diff="medium">😐 Médio</button>
+    <button class="btn btn-hard"   data-diff="hard">😈 Difícil</button>
+    <button class="btn btn-back" id="btnBackMenu1">← Voltar</button>
   </div>
 
-  <div class="status" id="status">Sua vez</div>
+  <!-- JOGO VS CPU -->
+  <div id="screenCpu" class="screen">
+    <div class="players" id="cpuInfo"></div>
+    <div class="status" id="cpuStatus">Sua vez</div>
+    <div class="board" id="cpuBoard"></div>
+    <button class="btn btn-primary" id="btnCpuRestart">Nova Partida</button>
+    <button class="btn btn-back" id="btnBackMenu2">← Voltar ao menu</button>
+  </div>
 
-  <div class="board" id="board" role="grid" aria-label="Tabuleiro"></div>
-
-  <button class="reset" id="reset" type="button">Nova Partida</button>
+  <!-- JOGO 2 JOGADORES -->
+  <div id="screenPvp" class="screen">
+    <div class="scores">
+      <div class="score x">
+        <div class="score-label">Jogador X</div>
+        <div class="score-value" id="pvpScoreX">0</div>
+      </div>
+      <div class="score">
+        <div class="score-label">Empates</div>
+        <div class="score-value" id="pvpScoreD">0</div>
+      </div>
+      <div class="score o">
+        <div class="score-label">Jogador O</div>
+        <div class="score-value" id="pvpScoreO">0</div>
+      </div>
+    </div>
+    <div class="status" id="pvpStatus">Vez do X</div>
+    <div class="board" id="pvpBoard"></div>
+    <button class="btn btn-primary" id="btnPvpRestart">Nova Partida</button>
+    <button class="btn btn-back" id="btnBackMenu3">← Voltar ao menu</button>
+  </div>
 </div>
 
 <script>
-/* =========================================================
-   CONFIGURAÇÃO
-   ========================================================= */
-const COMBOS = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8],   // linhas
-  [0, 3, 6], [1, 4, 7], [2, 5, 8],   // colunas
-  [0, 4, 8], [2, 4, 6]               // diagonais
-];
+(function () {
+  "use strict";
 
-const HUMANO = 'X';
-const CPU = 'O';
+  /* =====================================================
+     UTILITÁRIOS COMUNS
+     ===================================================== */
+  var COMBOS = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
 
-/* =========================================================
-   ESTADO
-   ========================================================= */
-let board = Array(9).fill('');
-let current = HUMANO;
-let running = true;
-let vsComputer = true;
-let scores = { X: 0, O: 0, D: 0 };
-let cells = [];
-let cpuTimer = null;
+  var HUMAN = "X";
+  var CPU   = "O";
 
-/* =========================================================
-   ELEMENTOS
-   ========================================================= */
-const boardEl  = document.getElementById('board');
-const statusEl = document.getElementById('status');
-const scoreXEl = document.getElementById('scoreX');
-const scoreOEl = document.getElementById('scoreO');
-const scoreDEl = document.getElementById('scoreD');
-const labelXEl = document.getElementById('labelX');
-const labelOEl = document.getElementById('labelO');
-const resetBtn = document.getElementById('reset');
-
-/* =========================================================
-   CONSTRUÇÃO DO TABULEIRO
-   ========================================================= */
-function buildBoard() {
-  boardEl.innerHTML = '';
-  cells = [];
-  for (let i = 0; i < 9; i++) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'cell';
-    btn.setAttribute('aria-label', `Casa ${i + 1}`);
-    btn.addEventListener('click', () => onCellClick(i));
-    boardEl.appendChild(btn);
-    cells.push(btn);
-  }
-}
-
-/* =========================================================
-   FLUXO DO JOGO
-   ========================================================= */
-function newGame() {
-  clearTimeout(cpuTimer);
-  board = Array(9).fill('');
-  current = HUMANO;
-  running = true;
-
-  cells.forEach(cell => {
-    cell.textContent = '';
-    cell.className = 'cell';
-  });
-
-  updateStatus();
-}
-
-function onCellClick(i) {
-  if (!running || board[i]) return;
-  if (vsComputer && current === CPU) return; // bloqueia durante a vez da CPU
-  makeMove(i, current);
-}
-
-function makeMove(i, player) {
-  board[i] = player;
-
-  const cell = cells[i];
-  cell.textContent = player;
-  cell.classList.add(player.toLowerCase(), 'pop');
-
-  const result = checkResult(board);
-  if (result) {
-    endGame(result);
-    return;
+  function showScreen(id) {
+    var all = document.querySelectorAll(".screen");
+    for (var i = 0; i < all.length; i++) all[i].classList.remove("active");
+    document.getElementById(id).classList.add("active");
   }
 
-  current = player === HUMANO ? CPU : HUMANO;
-  updateStatus();
-
-  if (vsComputer && current === CPU) {
-    cpuTimer = setTimeout(cpuTurn, 450);
+  function checkWinner(b) {
+    for (var i = 0; i < COMBOS.length; i++) {
+      var c = COMBOS[i];
+      if (b[c[0]] && b[c[0]] === b[c[1]] && b[c[0]] === b[c[2]]) {
+        return { winner: b[c[0]], line: c };
+      }
+    }
+    for (var j = 0; j < 9; j++) if (b[j] === "") return null;
+    return { draw: true };
   }
-}
 
-function cpuTurn() {
-  if (!running || current !== CPU) return;
-  const move = bestMove();
-  if (move !== -1) makeMove(move, CPU);
-}
+  function emptyCells(b) {
+    var arr = [];
+    for (var i = 0; i < 9; i++) if (b[i] === "") arr.push(i);
+    return arr;
+  }
 
-function endGame(result) {
-  running = false;
+  function randomMove(b) {
+    var e = emptyCells(b);
+    if (!e.length) return -1;
+    return e[Math.floor(Math.random() * e.length)];
+  }
 
-  if (result.draw) {
-    scores.D++;
-    statusEl.textContent = 'Empate! 🤝';
-    statusEl.className = 'status turn-draw';
-  } else {
-    scores[result.winner]++;
-    result.line.forEach(i => cells[i].classList.add('win'));
+  function findWinningMove(b, player) {
+    for (var i = 0; i < COMBOS.length; i++) {
+      var c = COMBOS[i];
+      var vals = [b[c[0]], b[c[1]], b[c[2]]];
+      var countP = 0, countE = 0;
+      for (var k = 0; k < 3; k++) {
+        if (vals[k] === player) countP++;
+        else if (vals[k] === "") countE++;
+      }
+      if (countP === 2 && countE === 1) {
+        if (b[c[0]] === "") return c[0];
+        if (b[c[1]] === "") return c[1];
+        return c[2];
+      }
+    }
+    return -1;
+  }
 
-    if (vsComputer) {
-      statusEl.textContent = result.winner === HUMANO ? 'Você venceu! 🎉' : 'CPU venceu! 🤖';
+  function minimax(b, depth, isMax) {
+    var r = checkWinner(b);
+    if (r) {
+      if (r.draw) return 0;
+      return (r.winner === CPU) ? (10 - depth) : (depth - 10);
+    }
+    var best, i;
+    if (isMax) {
+      best = -Infinity;
+      for (i = 0; i < 9; i++) {
+        if (b[i] !== "") continue;
+        b[i] = CPU;
+        var s = minimax(b, depth + 1, false);
+        if (s > best) best = s;
+        b[i] = "";
+      }
     } else {
-      statusEl.textContent = `Jogador ${result.winner} venceu! 🎉`;
+      best = Infinity;
+      for (i = 0; i < 9; i++) {
+        if (b[i] !== "") continue;
+        b[i] = HUMAN;
+        var s2 = minimax(b, depth + 1, true);
+        if (s2 < best) best = s2;
+        b[i] = "";
+      }
     }
-    statusEl.className = 'status ' + (result.winner === HUMANO ? 'turn-x' : 'turn-o');
+    return best;
   }
 
-  updateScores();
-}
-
-/* =========================================================
-   REGRAS
-   ========================================================= */
-function checkResult(b) {
-  for (const combo of COMBOS) {
-    const [a, c, d] = combo;
-    if (b[a] && b[a] === b[c] && b[a] === b[d]) {
-      return { winner: b[a], line: combo };
-    }
-  }
-  if (b.every(v => v !== '')) return { draw: true };
-  return null;
-}
-
-/* =========================================================
-   IA — MINIMAX (imbatível)
-   ========================================================= */
-function bestMove() {
-  let bestScore = -Infinity;
-  let move = -1;
-
-  for (let i = 0; i < 9; i++) {
-    if (board[i]) continue;
-
-    board[i] = CPU;
-    const score = minimax(board, 0, false);
-    board[i] = '';
-
-    if (score > bestScore) {
-      bestScore = score;
-      move = i;
-    }
-  }
-  return move;
-}
-
-function minimax(b, depth, isMaximizing) {
-  const result = checkResult(b);
-
-  if (result) {
-    if (result.draw) return 0;
-    // Vitória mais rápida vale mais; derrota mais tardia dói menos
-    return result.winner === CPU ? 10 - depth : depth - 10;
-  }
-
-  if (isMaximizing) {
-    let best = -Infinity;
-    for (let i = 0; i < 9; i++) {
-      if (b[i]) continue;
+  function bestMoveMinimax(b) {
+    var best = -Infinity, move = -1;
+    for (var i = 0; i < 9; i++) {
+      if (b[i] !== "") continue;
       b[i] = CPU;
-      best = Math.max(best, minimax(b, depth + 1, false));
-      b[i] = '';
+      var s = minimax(b, 0, false);
+      b[i] = "";
+      if (s > best) { best = s; move = i; }
     }
-    return best;
-  } else {
-    let best = Infinity;
-    for (let i = 0; i < 9; i++) {
-      if (b[i]) continue;
-      b[i] = HUMANO;
-      best = Math.min(best, minimax(b, depth + 1, true));
-      b[i] = '';
-    }
-    return best;
+    return move;
   }
-}
 
-/* =========================================================
-   INTERFACE
-   ========================================================= */
-function updateStatus() {
-  if (!running) return;
-  statusEl.className = 'status';
-
-  if (vsComputer) {
-    statusEl.textContent = current === HUMANO ? 'Sua vez' : 'CPU pensando…';
-  } else {
-    statusEl.textContent = `Vez do ${current}`;
-  }
-  statusEl.classList.add(current === HUMANO ? 'turn-x' : 'turn-o');
-}
-
-function updateScores() {
-  scoreXEl.textContent = scores.X;
-  scoreOEl.textContent = scores.O;
-  scoreDEl.textContent = scores.D;
-}
-
-function updateLabels() {
-  labelXEl.textContent = vsComputer ? 'Você (X)' : 'Jogador X';
-  labelOEl.textContent = vsComputer ? 'CPU (O)' : 'Jogador O';
-}
-
-/* =========================================================
-   EVENTOS
-   ========================================================= */
-resetBtn.addEventListener('click', newGame);
-
-document.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn')
-      .forEach(b => b.classList.toggle('active', b === btn));
-
-    vsComputer = btn.dataset.mode === 'cpu';
-    scores = { X: 0, O: 0, D: 0 };
-
-    updateScores();
-    updateLabels();
-    newGame();
+  /* =====================================================
+     NAVEGAÇÃO
+     ===================================================== */
+  document.getElementById("btnGoCpu").addEventListener("click", function () {
+    showScreen("screenDiff");
   });
-});
+  document.getElementById("btnGoPvp").addEventListener("click", function () {
+    showScreen("screenPvp");
+    startPvpGame();
+  });
+  document.getElementById("btnBackMenu1").addEventListener("click", function () {
+    showScreen("screenMenu");
+  });
+  document.getElementById("btnBackMenu2").addEventListener("click", function () {
+    clearTimeout(cpuTimer);
+    cpuActive = false;
+    showScreen("screenMenu");
+  });
+  document.getElementById("btnBackMenu3").addEventListener("click", function () {
+    showScreen("screenMenu");
+  });
 
-/* =========================================================
-   INICIALIZAÇÃO
-   ========================================================= */
-buildBoard();
-updateLabels();
-updateScores();
-newGame();
+  /* =====================================================
+     ==============  MODO CPU (3 DIFICULDADES) ===========
+     ===================================================== */
+  var cpuBoard = ["","","","","","","","",""];
+  var cpuTurn = HUMAN;
+  var cpuActive = false;
+  var cpuDiff = "medium";
+  var cpuTimer = null;
+  var cpuCells = [];
+
+  document.querySelectorAll("[data-diff]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      cpuDiff = btn.dataset.diff;
+      showScreen("screenCpu");
+      startCpuGame();
+    });
+  });
+
+  function buildCpuBoard() {
+    var el = document.getElementById("cpuBoard");
+    el.innerHTML = "";
+    cpuCells = [];
+    for (var i = 0; i < 9; i++) {
+      (function (idx) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "cell";
+        b.addEventListener("click", function () { onCpuCellClick(idx); });
+        el.appendChild(b);
+        cpuCells.push(b);
+      })(i);
+    }
+  }
+
+  function startCpuGame() {
+    clearTimeout(cpuTimer);
+    cpuBoard = ["","","","","","","","",""];
+    cpuTurn = HUMAN;
+    cpuActive = true;
+
+    if (!cpuCells.length) buildCpuBoard();
+    for (var i = 0; i < 9; i++) {
+      cpuCells[i].textContent = "";
+      cpuCells[i].className = "cell";
+      cpuCells[i].disabled = false;
+    }
+
+    var labels = { easy: "Fácil", medium: "Médio", hard: "Difícil" };
+    document.getElementById("cpuInfo").innerHTML =
+      'Você é X <span class="diff-tag ' + cpuDiff + '">' + labels[cpuDiff] + '</span>';
+
+    updateCpuStatus();
+  }
+
+  function updateCpuStatus() {
+    document.getElementById("cpuStatus").textContent =
+      cpuTurn === HUMAN ? "Sua vez" : "CPU pensando...";
+  }
+
+  function onCpuCellClick(i) {
+    if (!cpuActive) return;
+    if (cpuTurn !== HUMAN) return;
+    if (cpuBoard[i] !== "") return;
+    playCpuMove(i, HUMAN);
+  }
+
+  function playCpuMove(i, player) {
+    cpuBoard[i] = player;
+    cpuCells[i].textContent = player;
+    cpuCells[i].className = "cell " + player.toLowerCase();
+
+    var result = checkWinner(cpuBoard);
+    if (result) { endCpuGame(result); return; }
+
+    cpuTurn = (player === HUMAN) ? CPU : HUMAN;
+    updateCpuStatus();
+
+    if (cpuTurn === CPU) {
+      cpuTimer = setTimeout(cpuPlay, 400);
+    }
+  }
+
+  function cpuPlay() {
+    if (!cpuActive || cpuTurn !== CPU) return;
+    var move = chooseCpuMove();
+    if (move >= 0) playCpuMove(move, CPU);
+  }
+
+  function endCpuGame(result) {
+    cpuActive = false;
+    var el = document.getElementById("cpuStatus");
+
+    if (result.draw) {
+      el.textContent = "Empate! 🤝";
+    } else {
+      for (var i = 0; i < result.line.length; i++) {
+        cpuCells[result.line[i]].classList.add("win");
+      }
+      el.textContent = (result.winner === HUMAN)
+        ? "Você venceu! 🎉"
+        : "CPU venceu! 🤖";
+    }
+    for (var j = 0; j < 9; j++) cpuCells[j].disabled = true;
+  }
+
+  function chooseCpuMove() {
+    var b = cpuBoard;
+
+    if (cpuDiff === "easy") {
+      // 75% aleatório, 25% esperto
+      if (Math.random() < 0.75) return randomMove(b);
+      var win = findWinningMove(b, CPU);
+      if (win >= 0) return win;
+      var block = findWinningMove(b, HUMAN);
+      if (block >= 0) return block;
+      return randomMove(b);
+    }
+
+    if (cpuDiff === "medium") {
+      var win2 = findWinningMove(b, CPU);
+      if (win2 >= 0) return win2;
+
+      var block2 = findWinningMove(b, HUMAN);
+      if (block2 >= 0) return block2;
+
+      if (b[4] === "") return 4;
+
+      return randomMove(b);
+    }
+
+    // hard
+    return bestMoveMinimax(b);
+  }
+
+  document.getElementById("btnCpuRestart").addEventListener("click", startCpuGame);
+
+  /* =====================================================
+     ===================  2 JOGADORES  ===================
+     ===================================================== */
+  var pvpBoard = ["","","","","","","","",""];
+  var pvpTurn = "X";
+  var pvpActive = false;
+  var pvpCells = [];
+  var pvpScores = { X: 0, O: 0, D: 0 };
+
+  function buildPvpBoard() {
+    var el = document.getElementById("pvpBoard");
+    el.innerHTML = "";
+    pvpCells = [];
+    for (var i = 0; i < 9; i++) {
+      (function (idx) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "cell";
+        b.addEventListener("click", function () { onPvpCellClick(idx); });
+        el.appendChild(b);
+        pvpCells.push(b);
+      })(i);
+    }
+  }
+
+  function startPvpGame() {
+    pvpBoard = ["","","","","","","","",""];
+    pvpTurn = "X";
+    pvpActive = true;
+
+    if (!pvpCells.length) buildPvpBoard();
+    for (var i = 0; i < 9; i++) {
+      pvpCells[i].textContent = "";
+      pvpCells[i].className = "cell";
+      pvpCells[i].disabled = false;
+    }
+    updatePvpStatus();
+  }
+
+  function updatePvpStatus() {
+    document.getElementById("pvpStatus").textContent = "Vez do " + pvpTurn;
+  }
+
+  function updatePvpScores() {
+    document.getElementById("pvpScoreX").textContent = pvpScores.X;
+    document.getElementById("pvpScoreO").textContent = pvpScores.O;
+    document.getElementById("pvpScoreD").textContent = pvpScores.D;
+  }
+
+  function onPvpCellClick(i) {
+    if (!pvpActive) return;
+    if (pvpBoard[i] !== "") return;
+
+    pvpBoard[i] = pvpTurn;
+    pvpCells[i].textContent = pvpTurn;
+    pvpCells[i].className = "cell " + pvpTurn.toLowerCase();
+
+    var result = checkWinner(pvpBoard);
+    if (result) { endPvpGame(result); return; }
+
+    pvpTurn = (pvpTurn === "X") ? "O" : "X";
+    updatePvpStatus();
+  }
+
+  function endPvpGame(result) {
+    pvpActive = false;
+    var el = document.getElementById("pvpStatus");
+
+    if (result.draw) {
+      pvpScores.D++;
+      el.textContent = "Empate! 🤝";
+    } else {
+      pvpScores[result.winner]++;
+      for (var i = 0; i < result.line.length; i++) {
+        pvpCells[result.line[i]].classList.add("win");
+      }
+      el.textContent = "Jogador " + result.winner + " venceu! 🎉";
+    }
+    for (var j = 0; j < 9; j++) pvpCells[j].disabled = true;
+    updatePvpScores();
+  }
+
+  document.getElementById("btnPvpRestart").addEventListener("click", startPvpGame);
+
+  /* =====================================================
+     INICIALIZAÇÃO
+     ===================================================== */
+  buildCpuBoard();
+  buildPvpBoard();
+  updatePvpScores();
+})();
 </script>
 </body>
 </html>
